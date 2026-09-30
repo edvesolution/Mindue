@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Scadenza condivisa – Mindue</title>
+<style>
+:root{--p:#6C4DFF;--p2:#B14EF5;--t:#14142B;--s:#5E6282;--bg:#F5F6FB;--card:#fff;--line:#E9EAF3}
+@media (prefers-color-scheme:dark){:root{--t:#F2F2FA;--s:#A9ABC6;--bg:#12121C;--card:#1D1D2B;--line:#2C2C3E}}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,"Segoe UI",Roboto,Helvetica,sans-serif;background:var(--bg);color:var(--t);line-height:1.5}
+main{max-width:440px;margin:0 auto;padding:28px 16px 40px}
+header{display:flex;align-items:center;gap:10px;margin-bottom:22px}
+header img{width:40px;height:40px;border-radius:12px}header b{font-size:20px}
+.card{background:var(--card);border-radius:22px;padding:22px;box-shadow:0 8px 24px rgba(28,26,79,.08)}
+.from{color:var(--s);font-size:14px;margin:0 0 6px}
+h1{font-size:24px;margin:0 0 14px;line-height:1.25}
+.row{display:flex;justify-content:space-between;padding:10px 0;border-top:1px solid var(--line);font-size:15px}
+.row span:first-child{color:var(--s)}.row span:last-child{font-weight:700;text-align:right}
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;border:0;border-radius:16px;padding:15px;font-size:16px;font-weight:800;margin-top:12px;text-decoration:none;cursor:pointer;font-family:inherit}
+.primary{background:linear-gradient(135deg,var(--p),var(--p2));color:#fff}
+.ghost{background:transparent;color:var(--p);border:2px solid var(--p)}
+.note{color:var(--s);font-size:13px;text-align:center;margin-top:18px}
+.stores{display:flex;gap:10px;margin-top:10px}.stores a{flex:1;font-size:14px;padding:12px}
+.err{text-align:center;color:var(--s)}
+</style>
+</head>
+<body>
+<main>
+  <header><img src="logo.png" alt=""><b>Mindue</b></header>
+  <div id="box" class="card"></div>
+  <p class="note" id="privacy"></p>
+</main>
+<script>
+// ▶ Sostituisci con i link reali degli store dopo la pubblicazione
+var APP_STORE = 'https://apps.apple.com/app/idXXXXXXXXXX';
+var PLAY_STORE = 'https://play.google.com/store/apps/details?id=com.mindue.app';
+
+var L = {
+  it: {from:'{n} ti ha condiviso una scadenza', shared:'Scadenza condivisa', due:'Scadenza', rep:'Si ripete', amt:'Importo', open:'Apri in Mindue', cal:'Aggiungi al calendario', get:'Non hai Mindue? Scaricala gratis', bad:'Questo link non contiene una scadenza valida.', priv:'I dati della scadenza sono nel link e non vengono salvati su nessun server.',
+    rec:{monthly:'Ogni mese',bimonthly:'Ogni 2 mesi',quarterly:'Ogni 3 mesi',semiannual:'Ogni 6 mesi',yearly:'Ogni anno','2years':'Ogni 2 anni','5years':'Ogni 5 anni','10years':'Ogni 10 anni'}},
+  en: {from:'{n} shared a deadline with you', shared:'Shared deadline', due:'Due', rep:'Repeats', amt:'Amount', open:'Open in Mindue', cal:'Add to calendar', get:'Don’t have Mindue? Get it free', bad:'This link doesn’t contain a valid deadline.', priv:'The deadline details are in the link and are not stored on any server.',
+    rec:{monthly:'Every month',bimonthly:'Every 2 months',quarterly:'Every 3 months',semiannual:'Every 6 months',yearly:'Every year','2years':'Every 2 years','5years':'Every 5 years','10years':'Every 10 years'}},
+  es: {from:'{n} te ha compartido un vencimiento', shared:'Vencimiento compartido', due:'Vence', rep:'Se repite', amt:'Importe', open:'Abrir en Mindue', cal:'Añadir al calendario', get:'¿No tienes Mindue? Descárgala gratis', bad:'Este enlace no contiene un vencimiento válido.', priv:'Los datos están en el enlace y no se guardan en ningún servidor.',
+    rec:{monthly:'Cada mes',bimonthly:'Cada 2 meses',quarterly:'Cada 3 meses',semiannual:'Cada 6 meses',yearly:'Cada año','2years':'Cada 2 años','5years':'Cada 5 años','10years':'Cada 10 años'}},
+  fr: {from:'{n} t’a partagé une échéance', shared:'Échéance partagée', due:'Échéance', rep:'Se répète', amt:'Montant', open:'Ouvrir dans Mindue', cal:'Ajouter au calendrier', get:'Pas encore Mindue ? Télécharge-la gratuitement', bad:'Ce lien ne contient pas d’échéance valide.', priv:'Les données sont dans le lien et ne sont enregistrées sur aucun serveur.',
+    rec:{monthly:'Chaque mois',bimonthly:'Tous les 2 mois',quarterly:'Tous les 3 mois',semiannual:'Tous les 6 mois',yearly:'Chaque année','2years':'Tous les 2 ans','5years':'Tous les 5 ans','10years':'Tous les 10 ans'}},
+  de: {from:'{n} hat eine Frist mit dir geteilt', shared:'Geteilte Frist', due:'Fällig', rep:'Wiederholung', amt:'Betrag', open:'In Mindue öffnen', cal:'Zum Kalender hinzufügen', get:'Noch kein Mindue? Kostenlos laden', bad:'Dieser Link enthält keine gültige Frist.', priv:'Die Daten stehen im Link und werden auf keinem Server gespeichert.',
+    rec:{monthly:'Jeden Monat',bimonthly:'Alle 2 Monate',quarterly:'Alle 3 Monate',semiannual:'Alle 6 Monate',yearly:'Jedes Jahr','2years':'Alle 2 Jahre','5years':'Alle 5 Jahre','10years':'Alle 10 Jahre'}}
+};
+var lang = (navigator.language || 'it').slice(0,2); if (!L[lang]) lang = 'en';
+var T = L[lang]; document.documentElement.lang = lang;
+
+function esc(s){return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+var q = location.hash.replace(/^#/, ''), p = {};
+q.split('&').forEach(function(kv){var i=kv.indexOf('='); if(i>0){try{p[kv.slice(0,i)]=decodeURIComponent(kv.slice(i+1));}catch(e){}}});
+var box = document.getElementById('box');
+document.getElementById('privacy').textContent = T.priv;
+
+if (!/^\d{4}-\d{2}-\d{2}$/.test(p.d || '')) {
+  box.innerHTML = '<p class="err">' + T.bad + '</p>';
+} else {
+  var d = new Date(+p.d.slice(0,4), +p.d.slice(5,7)-1, +p.d.slice(8,10));
+  var dateTxt = d.toLocaleDateString(lang, {weekday:'long', day:'numeric', month:'long', year:'numeric'});
+  var title = (p.t || T.shared).slice(0,80);
+  var html = '<p class="from">' + (p.f ? esc(T.from.replace('{n}', p.f.slice(0,30))) : T.shared) + '</p>';
+  html += '<h1>' + esc(title) + '</h1>';
+  html += '<div class="row"><span>' + T.due + '</span><span>' + esc(dateTxt) + '</span></div>';
+  if (T.rec[p.r]) html += '<div class="row"><span>' + T.rep + '</span><span>' + T.rec[p.r] + '</span></div>';
+  if (p.a) html += '<div class="row"><span>' + T.amt + '</span><span>€ ' + esc(p.a.slice(0,12)) + '</span></div>';
+  html += '<a class="btn primary" id="open" href="mindue://add?' + esc(q) + '">📲 ' + T.open + '</a>';
+  html += '<button class="btn ghost" id="cal">📅 ' + T.cal + '</button>';
+  html += '<p class="note" style="margin-top:20px">' + T.get + '</p>';
+  html += '<div class="stores"><a class="btn ghost" href="' + APP_STORE + '">App Store</a><a class="btn ghost" href="' + PLAY_STORE + '">Google Play</a></div>';
+  box.innerHTML = html;
+
+  document.getElementById('cal').onclick = function(){
+    var RR = {monthly:'FREQ=MONTHLY',bimonthly:'FREQ=MONTHLY;INTERVAL=2',quarterly:'FREQ=MONTHLY;INTERVAL=3',semiannual:'FREQ=MONTHLY;INTERVAL=6',yearly:'FREQ=YEARLY','2years':'FREQ=YEARLY;INTERVAL=2','5years':'FREQ=YEARLY;INTERVAL=5','10years':'FREQ=YEARLY;INTERVAL=10'};
+    var pad = function(n){return String(n).padStart(2,'0');};
+    var e = new Date(d); e.setDate(e.getDate()+1);
+    var day = p.d.replace(/-/g,''), end = e.getFullYear()+pad(e.getMonth()+1)+pad(e.getDate());
+    var clean = function(s){return String(s).replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\n/g,'\\n');};
+    var lines = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Mindue//IT','BEGIN:VEVENT',
+      'UID:' + day + '-' + Math.random().toString(36).slice(2) + '@mindue.app',
+      'DTSTAMP:' + new Date().toISOString().replace(/[-:]/g,'').replace(/\.\d+Z$/,'Z'),
+      'DTSTART;VALUE=DATE:' + day, 'DTEND;VALUE=DATE:' + end, 'SUMMARY:' + clean(title)];
+    if (p.a) lines.push('DESCRIPTION:' + clean(T.amt + ': € ' + p.a));
+    if (RR[p.r]) lines.push('RRULE:' + RR[p.r]);
+    [7,1].forEach(function(n){lines.push('BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:' + clean(title),'TRIGGER:-P' + n + 'D','END:VALARM');});
+    lines.push('END:VEVENT','END:VCALENDAR');
+    var blob = new Blob([lines.join('\r\n')], {type:'text/calendar;charset=utf-8'});
+    var a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+    a.download = (title.replace(/[^\w\- ]+/g,'').trim() || 'scadenza') + '.ics';
+    document.body.appendChild(a); a.click(); a.remove();
+  };
+}
+</script>
+</body>
+</html>
