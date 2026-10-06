@@ -66,7 +66,8 @@ if (!/^\d{4}-\d{2}-\d{2}$/.test(p.d || '')) {
   var title = (p.t || T.shared).slice(0,80);
   var html = '<p class="from">' + (p.f ? esc(T.from.replace('{n}', p.f.slice(0,30))) : T.shared) + '</p>';
   html += '<h1>' + esc(title) + '</h1>';
-  html += '<div class="row"><span>' + T.due + '</span><span>' + esc(dateTxt) + '</span></div>';
+  var hh = /^([01]\d|2[0-3]):[0-5]\d$/.test(p.h || '') ? p.h : '';
+  html += '<div class="row"><span>' + T.due + '</span><span>' + esc(dateTxt) + (hh ? ' · ' + hh : '') + '</span></div>';
   if (T.rec[p.r]) html += '<div class="row"><span>' + T.rep + '</span><span>' + T.rec[p.r] + '</span></div>';
   if (p.a) html += '<div class="row"><span>' + T.amt + '</span><span>€ ' + esc(p.a.slice(0,12)) + '</span></div>';
   html += '<a class="btn primary" id="open" href="mindue://add?' + esc(q) + '">📲 ' + T.open + '</a>';
@@ -84,7 +85,13 @@ if (!/^\d{4}-\d{2}-\d{2}$/.test(p.d || '')) {
     var lines = ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Mindue//IT','BEGIN:VEVENT',
       'UID:' + day + '-' + Math.random().toString(36).slice(2) + '@mindue.app',
       'DTSTAMP:' + new Date().toISOString().replace(/[-:]/g,'').replace(/\.\d+Z$/,'Z'),
-      'DTSTART;VALUE=DATE:' + day, 'DTEND;VALUE=DATE:' + end, 'SUMMARY:' + clean(title)];
+      'SUMMARY:' + clean(title)];
+    if (hh) {
+      var h1 = +hh.slice(0,2), m1 = hh.slice(3,5), h2 = Math.min(h1 + 1, 23);
+      lines.push('DTSTART:' + day + 'T' + pad(h1) + m1 + '00', 'DTEND:' + day + 'T' + pad(h2) + (h2 === h1 ? '59' : m1) + '00');
+    } else {
+      lines.push('DTSTART;VALUE=DATE:' + day, 'DTEND;VALUE=DATE:' + end);
+    }
     if (p.a) lines.push('DESCRIPTION:' + clean(T.amt + ': € ' + p.a));
     if (RR[p.r]) lines.push('RRULE:' + RR[p.r]);
     [7,1].forEach(function(n){lines.push('BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:' + clean(title),'TRIGGER:-P' + n + 'D','END:VALARM');});
